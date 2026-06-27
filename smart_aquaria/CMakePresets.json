@@ -1,0 +1,91 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "vxworks-base",
+      "hidden": true,
+      "inherits": "base",
+      "environment": {
+        "PATH": "$env{WRSDK_HOME}/vxsdk/host/x86_64-linux/bin:$penv{PATH}"
+      }
+    },
+    {
+      "name": "vxworks-dkm-base",
+      "hidden": true,
+      "inherits": "vxworks-base",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{WRSDK_HOME}/vxsdk/sysroot/mk/dkm.toolchain.cmake"
+      }
+    },
+    {
+      "name": "vxworks-dkm-debug",
+      "displayName": "VxWorks DKM Debug",
+      "inherits": "vxworks-dkm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "vxworks-dkm-release",
+      "displayName": "VxWorks DKM Release",
+      "inherits": "vxworks-dkm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug",
+      "targets": ["smart_aquaria_linux"]
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release",
+      "targets": ["smart_aquaria_linux"]
+    },
+    {
+      "name": "vxworks-dkm-debug",
+      "configurePreset": "vxworks-dkm-debug"
+    },
+    {
+      "name": "vxworks-dkm-release",
+      "configurePreset": "vxworks-dkm-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    }
+  ]
+}

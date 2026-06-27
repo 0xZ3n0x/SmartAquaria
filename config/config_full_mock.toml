@@ -1,0 +1,59 @@
+# SmartAquaria — Full Mock Configuration
+# All hardware is simulated: sensors via virtual UARTs, buzzer via gpio-sim,
+# display via terminal (ANSI). Use this for local development and CI.
+#
+# Run with:
+#   python3 -m aquarunner  (uses config.toml by default — same as this file)
+# Or explicitly:
+#   # edit aquarunner/__main__.py config_path to point here if needed
+
+[display]
+type = "terminal"
+
+[mock]
+sensor   = true   # start sensor_peripheral mock process
+actuator = true   # start actuator_peripheral mock process + gpio-sim
+
+[serial]
+baudrate = 115200
+timeout  = 1.0
+
+[serial.ports.temp]
+mock = "/tmp/vport0"
+main = "/tmp/vport1"
+
+[serial.ports.do]
+mock = "/tmp/vport2"
+main = "/tmp/vport3"
+
+[log]
+main     = "log/main.log"
+sensor   = "log/sensor.log"
+actuator = "log/actuator.log"
+display  = "log/display.log"
+
+# chip path is patched at runtime by aquarunner
+[gpio]
+chip = "/dev/gpiochip2"
+
+[gpio.buzzer]
+line = 0
+
+[gpio.heater]
+line = 1
+
+# No [spi] section → TerminalDisplayDevice is used
+
+[thresholds.temp]
+min         = 20
+max         = 30
+critical_lo = 16
+critical_hi = 34
+
+[thresholds.do]
+warning  = 6.0
+critical = 5.0
+
+[intervals]
+sampling_seconds = 0.2
+feeding_seconds  = 28800

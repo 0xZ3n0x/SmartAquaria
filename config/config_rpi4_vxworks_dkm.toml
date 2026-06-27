@@ -1,0 +1,75 @@
+# SmartAquaria — VxWorks 7 DKM Configuration (Raspberry Pi 4 Model B)
+# All peripherals use real hardware: sensors on physical UARTs, buzzer and
+# heater on real GPIO, display on ST7789 over SPI.
+#
+# Wiring (BCM pin numbers):
+#
+#   ST7789 display (SPI0 — bcm2711-spi-0, ctrl_index=0):
+#     VCC  → 3.3 V   (Pin  1)
+#     GND  → GND     (Pin  6)
+#     SCL  → GPIO11  (Pin 23)  SCLK / SPI0
+#     SDA  → GPIO10  (Pin 19)  MOSI / SPI0
+#     RES  → GPIO27  (Pin 13)  RST
+#     DC   → GPIO25  (Pin 22)  Data/Command
+#     CS   → GPIO8   (Pin 24)  CE0  / SPI0
+#
+#   Buzzer : GPIO17  (Pin 11)
+#   Heater : GPIO18  (Pin 12)
+#
+#   EZO-RTD (temp sensor)  — /ttyS1 (pl01x-uart-0)
+#   EZO-DO  (dissolved oxygen sensor) — /ttyS2 (pl01x-uart-1)
+#
+# Notes:
+#   - /ttyS0 (ns16550-0 / mini UART) is the debug console, do not use for sensors.
+#   - gpio.chip is ignored in DKM mode; GPIO pin numbers are global BCM numbers.
+#   - If /ttyS1 and /ttyS2 are swapped, exchange the two port values below.
+#   - Log files are written to the SD card (/sd0a).
+
+[display]
+type = "st7789"
+
+[serial]
+baudrate = 9600
+timeout  = 1.5
+
+[serial.ports.temp]
+main = "/ttyS1"   # EZO-RTD — pl01x-uart-0
+
+[serial.ports.do]
+main = "/ttyS2"   # EZO-DO  — pl01x-uart-1
+
+[log]
+main    = "./main.log"
+display = "./display.log"
+
+[gpio]
+chip = ""   # ignored in VxWorks DKM mode
+
+[gpio.buzzer]
+line = 17   # BCM GPIO17 — Pin 11
+
+[gpio.heater]
+line = 18   # BCM GPIO18 — Pin 12
+
+[gpio.display]
+dc_line  = 25   # BCM GPIO25 — Pin 22 (Data/Command)
+rst_line = 27   # BCM GPIO27 — Pin 13 (Reset)
+
+[spi]
+ctrl_index  = 0          # bcm2711-spi-0
+speed_hz    = 20000000   # 20 MHz
+chip_select = 0          # CE0
+
+[thresholds.temp]
+min         = 20.0
+max         = 30.0
+critical_lo = 16.0
+critical_hi = 34.0
+
+[thresholds.do]
+warning  = 6.0
+critical = 5.0
+
+[intervals]
+sampling_seconds = 0.2
+feeding_seconds  = 28800   # 8 h

@@ -1,0 +1,84 @@
+# SmartAquaria — Sensors Mock, Hardware Display + Actuator
+# Sensors run as virtual UARTs (mock_peripheral). Buzzer and heater use real
+# GPIO on Raspberry Pi 4. Display uses ST7789 over SPI.
+#
+# Wiring (BCM pin numbers):
+#
+#   ST7789 display:
+#     VCC  → 3.3V   (Pin 1)
+#     GND  → GND    (Pin 6)
+#     SCL  → GPIO11 / SCLK  (Pin 23)  — SPI0
+#     SDA  → GPIO10 / MOSI  (Pin 19)  — SPI0
+#     RES  → GPIO27          (Pin 13)  — RST
+#     DC   → GPIO25          (Pin 22)  — Data/Command
+#     CS   → GPIO8  / CE0   (Pin 24)  — SPI0 CS0
+#
+#   Buzzer : GPIO17 (Pin 11)
+#   Heater : GPIO18 (Pin 12)
+#
+# Before running:
+#   - Enable SPI: sudo raspi-config → Interfacing Options → SPI → Enable
+#   - Start virtual UART pairs (sensors are still simulated):
+#       socat -d pty,raw,echo=0,link=/tmp/vport0 pty,raw,echo=0,link=/tmp/vport1 &
+#       socat -d pty,raw,echo=0,link=/tmp/vport2 pty,raw,echo=0,link=/tmp/vport3 &
+#   - Start the sensor mock:
+#       python3 mock_peripheral/sensor_peripheral.py config_sensors_mock.toml
+#   - Run aquarunner (starts remaining processes):
+#       python3 -m aquarunner  (after editing config_path in __main__.py)
+
+[display]
+type = "st7789"
+
+[mock]
+sensor   = true    # start sensor_peripheral mock process + virtual UARTs
+actuator = false   # buzzer and heater use real GPIO — no gpio-sim
+
+[serial]
+baudrate = 115200
+timeout  = 1.0
+
+[serial.ports.temp]
+mock = "/tmp/vport0"
+main = "/tmp/vport1"
+
+[serial.ports.do]
+mock = "/tmp/vport2"
+main = "/tmp/vport3"
+
+[log]
+main     = "log/main.log"
+sensor   = "log/sensor.log"
+actuator = "log/actuator.log"
+
+# RPi4 main GPIO chip (BCM GPIO 0-53)
+[gpio]
+chip = "/dev/gpiochip0"
+
+[gpio.buzzer]
+line = 17   # BCM GPIO17 — Pin 11
+
+[gpio.heater]
+line = 18   # BCM GPIO18 — Pin 12
+
+# ST7789 SPI display (real hardware)
+[spi]
+device    = "/dev/spidev0.0"
+speed_hz  = 20000000   # 20 MHz
+
+[gpio.display]
+dc_line  = 25   # BCM GPIO25 — Pin 22 (Data/Command)
+rst_line = 27   # BCM GPIO27 — Pin 13 (Reset)
+
+[thresholds.temp]
+min         = 20
+max         = 30
+critical_lo = 16
+critical_hi = 34
+
+[thresholds.do]
+warning  = 6.0
+critical = 5.0
+
+[intervals]
+sampling_seconds = 0.2
+feeding_seconds  = 28800

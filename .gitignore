@@ -1,0 +1,27 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Log files
+*.log
+log/
+
+# Cache / IDE
+.cache/
+.vscode/
+
+# CMake / build files
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+
+# Temporary / compiled files
+*.o
+*.obj
+*.so
+*.exe
+*.out
+*.a
+*.lib

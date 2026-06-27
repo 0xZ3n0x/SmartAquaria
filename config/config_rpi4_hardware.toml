@@ -1,0 +1,91 @@
+# SmartAquaria — Full Hardware Configuration (Raspberry Pi 4)
+# All peripherals use real hardware: sensors on physical UARTs, buzzer and
+# heater on real GPIO, display on ST7789 over SPI.
+#
+# Wiring (BCM pin numbers):
+#
+#   ST7789 display (SPI0):
+#     VCC  → 3.3 V   (Pin  1)
+#     GND  → GND     (Pin  6)
+#     SCL  → GPIO11  (Pin 23)  SCLK / SPI0
+#     SDA  → GPIO10  (Pin 19)  MOSI / SPI0
+#     RES  → GPIO27  (Pin 13)  RST
+#     DC   → GPIO25  (Pin 22)  Data/Command
+#     CS   → GPIO8   (Pin 24)  CE0  / SPI0
+#
+#   Buzzer : GPIO17  (Pin 11)
+#   Heater : GPIO18  (Pin 12)
+#
+#   EZO-RTD (temp sensor)  — UART3 overlay  (dtoverlay=uart3)
+#     TX → GPIO4  (Pin  7)   →  sensor RX
+#     RX → GPIO5  (Pin 29)   ←  sensor TX
+#     Appears as /dev/ttyAMA2
+#
+#   EZO-DO (dissolved oxygen sensor)  — UART5 overlay  (dtoverlay=uart5)
+#     TX → GPIO12 (Pin 32)   →  sensor RX
+#     RX → GPIO13 (Pin 33)   ←  sensor TX
+#     Appears as /dev/ttyAMA4
+#
+# /boot/firmware/config.txt additions required:
+#   dtoverlay=uart3
+#   dtoverlay=uart5
+#
+# Before running:
+#   - Enable SPI:  sudo raspi-config → Interfacing Options → SPI → Enable
+#   - Add overlays above and reboot
+#   - Run aquarunner:
+#       python3 -m aquarunner config_rpi4_hardware.toml
+
+[display]
+type = "st7789"
+
+[mock]
+sensor   = false   # real EZO UART sensors
+actuator = false   # real GPIO buzzer + heater
+
+[serial]
+baudrate = 9600    # EZO default baud rate
+timeout  = 1.5
+
+[serial.ports.temp]
+main = "/dev/ttyAMA3"   # EZO-RTD — UART3 (dtoverlay=uart3, GPIO4/GPIO5)
+
+[serial.ports.do]
+main = "/dev/ttyAMA5"   # EZO-DO  — UART5 (dtoverlay=uart5, GPIO12/GPIO13)
+
+[log]
+main     = "log/main.log"
+sensor   = "log/sensor.log"
+actuator = "log/actuator.log"
+
+# RPi4 main GPIO chip (BCM GPIO 0–53)
+[gpio]
+chip = "/dev/gpiochip0"
+
+[gpio.buzzer]
+line = 17   # BCM GPIO17 — Pin 11
+
+[gpio.heater]
+line = 18   # BCM GPIO18 — Pin 12
+
+[spi]
+device    = "/dev/spidev0.0"
+speed_hz  = 20000000   # 20 MHz
+
+[gpio.display]
+dc_line  = 25   # BCM GPIO25 — Pin 22 (Data/Command)
+rst_line = 27   # BCM GPIO27 — Pin 13 (Reset)
+
+[thresholds.temp]
+min         = 20
+max         = 30
+critical_lo = 16
+critical_hi = 34
+
+[thresholds.do]
+warning  = 6.0
+critical = 5.0
+
+[intervals]
+sampling_seconds = 0.2
+feeding_seconds  = 28800   # 8 h
